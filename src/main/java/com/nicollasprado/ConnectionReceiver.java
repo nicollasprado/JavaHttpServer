@@ -13,12 +13,15 @@ public class ConnectionReceiver extends Thread {
     }
 
     public void run(){
-        try {
-            Socket newClient = serverSocket.accept();
-            this.connectedClientsQuantity++;
-            new ConnectionHandler(newClient).start();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        while(true){
+            try {
+                Socket newClient = serverSocket.accept();
+                this.connectedClientsQuantity++;
+                new ConnectionHandler(newClient).start();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
+
 }
