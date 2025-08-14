@@ -1,0 +1,9 @@
+package com.nicollasprado.enums;
+
+public enum HttpMethod {
+    GET,
+    POST,
+    PUT,
+    DELETE,
+    PATCH
+}

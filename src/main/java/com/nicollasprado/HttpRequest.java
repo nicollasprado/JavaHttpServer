@@ -1,0 +1,14 @@
+package com.nicollasprado;
+
+import com.nicollasprado.enums.HttpMethod;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+
+@RequiredArgsConstructor
+@Getter
+@Setter
+public class HttpRequest {
+    private final HttpMethod method;
+    private HttpHeader[] headers;
+}
