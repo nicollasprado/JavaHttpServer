@@ -1,4 +1,4 @@
-package com.nicollasprado;
+package com.nicollasprado.types;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

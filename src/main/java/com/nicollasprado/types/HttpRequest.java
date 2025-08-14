@@ -1,4 +1,4 @@
-package com.nicollasprado;
+package com.nicollasprado.types;
 
 import com.nicollasprado.enums.HttpMethod;
 import lombok.Getter;
