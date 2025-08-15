@@ -11,6 +11,7 @@ public class HttpServer {
     private final ServerSocket serverSocket;
     private ConnectionReceiver connReceiver;
     private static final Logger LOGGER = LogManager.getLogger();
+    private final ControllersHandler controllersHandler = ControllersHandler.getHandler();
 
     public HttpServer(String host, int port){
         try{
@@ -32,6 +33,10 @@ public class HttpServer {
 
         this.connReceiver = new ConnectionReceiver(serverSocket);
         this.connReceiver.start();
+    }
+
+    public void registerController(Class<?> controller){
+        controllersHandler.registerController(controller);
     }
 
 }

@@ -1,13 +1,10 @@
 package com.nicollasprado;
 
-import com.nicollasprado.types.HttpResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.Socket;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 public class ConnectionHandler extends Thread {
     private static final Logger LOGGER = LogManager.getLogger();

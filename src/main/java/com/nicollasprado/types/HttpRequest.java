@@ -10,5 +10,6 @@ import lombok.Setter;
 @Setter
 public class HttpRequest {
     private final HttpMethod method;
+    private final String endpoint;
     private HttpHeader[] headers;
 }

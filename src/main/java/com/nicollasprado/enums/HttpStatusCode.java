@@ -7,12 +7,15 @@ import lombok.Getter;
 @Getter
 public enum HttpStatusCode {
     OK(200),
-    CREATED(201);
+    CREATED(201),
+    NOT_FOUND(404);
 
     private final int code;
 
     public String toString(){
-        return this.code + " " + this.name();
+        String refinedName = this.name().replace("_", " ");
+
+        return this.code + " " + refinedName;
     }
 
 }
