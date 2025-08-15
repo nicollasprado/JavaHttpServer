@@ -2,8 +2,6 @@ package com.nicollasprado;
 
 import com.nicollasprado.enums.HttpMethod;
 import com.nicollasprado.enums.HttpStatusCode;
-import com.nicollasprado.exceptions.InvalidHttpMethodException;
-import com.nicollasprado.exceptions.InvalidHttpProtocolVersionException;
 import com.nicollasprado.types.Endpoint;
 import com.nicollasprado.types.HttpRequest;
 import com.nicollasprado.types.HttpResponse;
@@ -27,63 +25,42 @@ public class RequestHandler {
     }
 
     private HttpRequest parseRequest(String request){
-        int iterIndex = 0;
+        int firstLineFinalIndex = request.indexOf('\r');
 
-        // Extract http method
-        StringBuilder method = new StringBuilder();
-        for(; iterIndex < request.length(); iterIndex++){
-            char iterChar = request.charAt(iterIndex);
+        String firstLine = request.substring(0, firstLineFinalIndex);
+        String[] firstLineParts = firstLine.trim().split("\\s+");
 
-            if(iterChar == '/'){
-                break;
-            }
+        String method = firstLineParts[0];
+        String path = firstLineParts[1];
+        String protocolVersion = firstLineParts[2];
 
-            method.append(iterChar);
-        }
-
-        HttpMethod parsedMethod;
-        try {
-            parsedMethod = HttpMethod.valueOf(method.toString().trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            LOGGER.error("Invalid HTTP method requested, method: {}", method);
-            throw new InvalidHttpMethodException();
-        }
-
-        StringBuilder endpoint = new StringBuilder();
-        for(; iterIndex < request.length(); iterIndex++){
-            char iterChar = request.charAt(iterIndex);
-
-            if(iterChar == ' '){
-                break;
-            }
-
-            endpoint.append(iterChar);
-        }
-
-        // Extract http protocol version
-        StringBuilder httpVersion = new StringBuilder();
-        for(; iterIndex < request.length(); iterIndex++){
-            char iterChar = request.charAt(iterIndex);
-
-            if(iterChar == '\n') break;
-            if(iterChar == ' ') continue;
-
-            httpVersion.append(iterChar);
-        }
-
-        if(!httpVersion.toString().trim().equals("HTTP/1.1")){
-            LOGGER.error("Invalid HTTP Protocol version, version: {}", httpVersion.toString());
-            throw new InvalidHttpProtocolVersionException();
-        }
-
-        return new HttpRequest(parsedMethod, endpoint.toString());
+        return new HttpRequest(method, path, protocolVersion);
     }
 
     private HttpResponse generateResponse(HttpRequest request){
-        String requestedEndpoint = request.getEndpoint();
+        // Validate http version
+        String requestedProtocolVersion = request.getProtocolVersion();
 
+        if(!requestedProtocolVersion.equalsIgnoreCase("HTTP/1.1")){
+            LOGGER.error("Invalid HTTP protocol version requested, version: {}", requestedProtocolVersion);
+            return new HttpResponse(HttpStatusCode.HTTP_VERSION_NOT_SUPPORTED);
+        }
+
+        // Validate Method
+        String requestedMethod = request.getMethod();
+
+        try {
+            HttpMethod parsedMethod = HttpMethod.valueOf(requestedMethod);
+        } catch (IllegalArgumentException e) {
+            LOGGER.error("Invalid HTTP method requested, method: {}", requestedMethod);
+            return new HttpResponse(HttpStatusCode.METHOD_NOT_ALLOWED);
+        }
+
+        // Validate endpoint
+        String requestedEndpoint = request.getEndpoint();
         List<Endpoint> endpoints = controllersHandler.getEndpoints();
         boolean validEndpoint = false;
+
         for(Endpoint endpoint : endpoints){
             if(endpoint.getPath().equals(requestedEndpoint)){
                 validEndpoint = true;
