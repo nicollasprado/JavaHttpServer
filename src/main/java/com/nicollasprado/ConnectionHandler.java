@@ -1,10 +1,5 @@
 package com.nicollasprado;
 
-import com.nicollasprado.enums.HttpMethod;
-import com.nicollasprado.enums.HttpStatusCode;
-import com.nicollasprado.exceptions.InvalidHttpMethodException;
-import com.nicollasprado.exceptions.InvalidHttpProtocolVersionException;
-import com.nicollasprado.types.HttpRequest;
 import com.nicollasprado.types.HttpResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,8 +10,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 public class ConnectionHandler extends Thread {
-    private final Socket clientSocket;
     private static final Logger LOGGER = LogManager.getLogger();
+    private final Socket clientSocket;
+    private final RequestHandler requestHandler = new RequestHandler();
 
     public ConnectionHandler(Socket newClientSocket){
         this.clientSocket = newClientSocket;
@@ -46,8 +42,7 @@ public class ConnectionHandler extends Thread {
             }
 
             System.out.println(requestStrBuilder);
-            HttpRequest parsedRequest = parseRequest(requestStrBuilder.toString());
-            HttpResponse response = processRequest(parsedRequest);
+            String response = requestHandler.processRequest(requestStrBuilder.toString());
 
             LOGGER.info("HTTP response successfully sent to client: {}", clientSocket);
             sendResponse(response);
@@ -61,54 +56,7 @@ public class ConnectionHandler extends Thread {
         }
     }
 
-    private HttpRequest parseRequest(String request){
-        int iterIndex = 0;
-
-        // Extract http method
-        StringBuilder method = new StringBuilder();
-        for(; iterIndex < request.length(); iterIndex++){
-            char iterChar = request.charAt(iterIndex);
-
-            if(iterChar == '/'){
-                iterIndex++;
-                break;
-            }
-
-            method.append(iterChar);
-        }
-
-        HttpMethod parsedMethod;
-        try {
-            parsedMethod = HttpMethod.valueOf(method.toString().trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            LOGGER.error("Invalid HTTP method requested, method: {}", method);
-            throw new InvalidHttpMethodException();
-        }
-
-        // Extract http protocol version
-        StringBuilder httpVersion = new StringBuilder();
-        for(; iterIndex < request.length(); iterIndex++){
-            char iterChar = request.charAt(iterIndex);
-
-            if(iterChar == '\n') break;
-            if(iterChar == ' ') continue;
-
-            httpVersion.append(iterChar);
-        }
-
-        if(!httpVersion.toString().trim().equals("HTTP/1.1")){
-            LOGGER.error("Invalid HTTP Protocol version, version: {}", httpVersion.toString());
-            throw new InvalidHttpProtocolVersionException();
-        }
-
-        return new HttpRequest(parsedMethod);
-    }
-
-    private HttpResponse processRequest(HttpRequest request){
-        return new HttpResponse(HttpStatusCode.OK);
-    }
-
-    private void sendResponse(HttpResponse response){
+    private void sendResponse(String response){
         BufferedWriter writer;
 
         try{
@@ -117,14 +65,8 @@ public class ConnectionHandler extends Thread {
             throw new RuntimeException(e);
         }
 
-        ZoneId SaoPauloZoneId = ZoneId.of("America/Sao_Paulo");
-        LocalDateTime serverDatetime = LocalDateTime.now(SaoPauloZoneId);
-        String responseStatus = response.getStatusCode().toString();
-
         try{
-            writer.write("HTTP/1.1 " + responseStatus + "\r\n");
-            writer.write("DATE: " + serverDatetime + "\r\n");
-            writer.write("\r\n\r\n");
+            writer.write(response);
             writer.flush();
         } catch (IOException e) {
             throw new RuntimeException(e);
